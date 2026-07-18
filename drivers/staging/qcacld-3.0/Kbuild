@@ -73,6 +73,7 @@ HDD_SRC_DIR :=	$(HDD_DIR)/src
 HDD_INC := 	-I$(WLAN_ROOT)/$(HDD_INC_DIR) \
 		-I$(WLAN_ROOT)/$(HDD_SRC_DIR)
 
+ccflags-y += $(HDD_INC)
 HDD_OBJS := 	$(HDD_SRC_DIR)/wlan_hdd_assoc.o \
 		$(HDD_SRC_DIR)/wlan_hdd_cfg.o \
 		$(HDD_SRC_DIR)/wlan_hdd_cfg80211.o \
@@ -1959,6 +1960,7 @@ WMA_SRC_DIR :=  $(WMA_DIR)/src
 
 WMA_INC :=	-I$(WLAN_ROOT)/$(WMA_INC_DIR) \
 		-I$(WLAN_ROOT)/$(WMA_SRC_DIR)
+ccflags-y += $(WMA_INC)
 
 ifeq ($(CONFIG_QCACLD_FEATURE_NAN), y)
 WMA_NDP_OBJS += $(WMA_SRC_DIR)/wma_nan_datapath.o
