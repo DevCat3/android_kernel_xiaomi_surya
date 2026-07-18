@@ -4,3 +4,6 @@
 [submodule "Re-Kernel"]
 	path = Re-Kernel
 	url = https://github.com/Sakion-Team/Re-Kernel
+[submodule "nomount"]
+	path = nomount
+	url = https://github.com/maxsteeel/nomount

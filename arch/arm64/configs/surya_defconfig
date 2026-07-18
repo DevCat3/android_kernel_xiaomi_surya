@@ -765,3 +765,4 @@ CONFIG_BBG=y
 CONFIG_LSM="lockdown,yama,loadpin,safesetid,integrity,selinux,smack,tomoyo,apparmor,bpf,baseband_guard"
 CONFIG_REKERNEL=y
 CONFIG_REKERNEL_NETWORK=n
+CONFIG_NOMOUNT=y
