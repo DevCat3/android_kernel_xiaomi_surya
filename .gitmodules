@@ -10,3 +10,6 @@
 [submodule "KernelSU"]
 	path = KernelSU
 	url = https://github.com/ReSukiSU/ReSukiSU
+[submodule "NonGKI_Kernel_Build_2nd"]
+	path = NonGKI_Kernel_Build_2nd
+	url = https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd
