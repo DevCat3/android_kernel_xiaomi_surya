@@ -138,3 +138,8 @@ tc/
 out/
 log.txt
 
+#
+# Ignoring KernelSU repo
+#
+KernelSU/
+KernelSU-Next/
