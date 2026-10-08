@@ -830,7 +830,7 @@ static void smap_gather_stats(struct vm_area_struct *vma,
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MAP
 	if (vma->vm_file && SUSFS_IS_INODE_SUS_MAP(file_inode(vma->vm_file)))
-		return 0;
+		return;
 #endif
 
 	smaps_walk.private = mss;
