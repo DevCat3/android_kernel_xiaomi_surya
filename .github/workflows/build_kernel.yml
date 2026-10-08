@@ -187,30 +187,56 @@ jobs:
           chmod +x build_kernel.sh
           ./build_kernel.sh -j 4
 
-      - name: List build artifacts
+      - name: List dist files
         if: always()
         run: |
-          echo "Build output:"
-          find out -type f 2>/dev/null | sort || true
+          echo "Files in dist:"
+          find dist -maxdepth 1 -type f -printf '%f\n' 2>/dev/null | sort || true
 
-          echo ""
-          echo "Distribution output:"
-          find dist -type f 2>/dev/null | sort || true
-
-      - name: Upload kernel artifacts
-        if: success()
+      - name: Upload Image
+        if: success() && hashFiles('dist/Image') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: surya-kernel
-          path: dist/**
+          name: Image
+          path: dist/Image
           if-no-files-found: error
-          retention-days: 30
+
+      - name: Upload Image.gz
+        if: success() && hashFiles('dist/Image.gz') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: Image.gz
+          path: dist/Image.gz
+          if-no-files-found: error
+
+      - name: Upload dtbo.img
+        if: success() && hashFiles('dist/dtbo.img') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: dtbo.img
+          path: dist/dtbo.img
+          if-no-files-found: error
+
+      - name: Upload dtb.img
+        if: success() && hashFiles('dist/dtb.img') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: dtb.img
+          path: dist/dtb.img
+          if-no-files-found: error
+
+      - name: Upload vmlinux
+        if: success() && hashFiles('dist/vmlinux') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: vmlinux
+          path: dist/vmlinux
+          if-no-files-found: error
 
       - name: Upload build log
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: surya-kernel-build-log
+          name: build-log
           path: out/build.log
           if-no-files-found: warn
-          retention-days: 7
