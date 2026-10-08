@@ -88,37 +88,127 @@ jobs:
           git submodule sync --recursive
           git submodule update --init --recursive
 
-      - name: Download toolchain
+      - name: Download toolchain from MediaFire
         run: |
-          TOOLCHAIN_URL="https://www.mediafire.com/file/nye07pqvologena/toolchain.zip/file"
+          mediafire_auto_download() {
+            local URL="$1"
+            local DEST_DIR="$2"
+            local real_url
 
-          wget \
-            --content-disposition \
-            --no-clobber \
-            "$TOOLCHAIN_URL" \
-            -O toolchain.zip
+            if [[ -z "$URL" ]]; then
+              echo "No MediaFire URL provided."
+              return 1
+            fi
+
+            mkdir -p "$DEST_DIR"
+
+            echo "Trying static scrape..."
+
+            real_url=$(curl -sL \
+              -A "Mozilla/5.0" \
+              "$URL" |
+              grep -Eo 'https://download[^"'\'' ]+' |
+              head -n 1 || true)
+
+            if [[ -n "$real_url" ]]; then
+              echo "Found direct download URL:"
+              echo "$real_url"
+
+              echo "Downloading to:"
+              echo "$DEST_DIR"
+
+              curl -L \
+                -A "Mozilla/5.0" \
+                -e "$URL" \
+                -o "$DEST_DIR/toolchain.zip" \
+                "$real_url"
+
+              return $?
+            fi
+
+            echo "Static scrape failed."
+            echo "Trying headless Chromium render..."
+
+            local chrome_bin="${CHROME_BIN:-chromium}"
+            local domex
+
+            if ! command -v "$chrome_bin" >/dev/null 2>&1; then
+              echo "Chromium not found."
+              return 2
+            fi
+
+            domex=$(mktemp)
+
+            "$chrome_bin" \
+              --headless \
+              --disable-gpu \
+              --dump-dom \
+              --no-first-run \
+              --no-default-browser-check \
+              --no-sandbox \
+              "$URL" > "$domex" 2>/dev/null || {
+                echo "Chromium render failed."
+                rm -f "$domex"
+                return 3
+              }
+
+            real_url=$(grep -Eo \
+              'https://download[^"'\'' ]+' \
+              "$domex" |
+              head -n 1 || true)
+
+            rm -f "$domex"
+
+            if [[ -z "$real_url" ]]; then
+              echo "Could not find a direct MediaFire download URL."
+              return 4
+            fi
+
+            echo "Found direct download URL:"
+            echo "$real_url"
+
+            curl -L \
+              -A "Mozilla/5.0" \
+              -e "$URL" \
+              -o "$DEST_DIR/toolchain.zip" \
+              "$real_url"
+          }
+
+          mediafire_auto_download \
+            "https://www.mediafire.com/file/nye07pqvologena/toolchain.zip/file" \
+            "$GITHUB_WORKSPACE"
+
+          test -f "$GITHUB_WORKSPACE/toolchain.zip"
+
+          echo "Toolchain archive:"
+          ls -lh "$GITHUB_WORKSPACE/toolchain.zip"
 
       - name: Extract toolchain
         run: |
+          rm -rf toolchain
           mkdir -p toolchain
-          unzip toolchain.zip
 
-          echo "Toolchain contents:"
-          find toolchain -maxdepth 4 -type d | sort | head -200
+          unzip -q toolchain.zip -d toolchain
+
+          echo "Toolchain directory:"
+          find toolchain -maxdepth 4 -type d | sort
 
       - name: Verify toolchain
         run: |
-          test -d "toolchain/clang/host/linux-x86/clang-r383902/bin"
-          test -d "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin"
+          echo "Checking Clang..."
 
+          test -d "toolchain/clang/host/linux-x86/clang-r383902/bin"
           test -x "toolchain/clang/host/linux-x86/clang-r383902/bin/clang"
 
+          echo "Checking GCC..."
+
+          test -d "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin"
           test -x "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc"
 
-          echo "Clang:"
+          echo "Clang version:"
           toolchain/clang/host/linux-x86/clang-r383902/bin/clang --version
 
-          echo "GCC:"
+          echo "GCC version:"
           toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc --version
 
       - name: Make build script executable
