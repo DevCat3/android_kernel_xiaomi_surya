@@ -185,10 +185,7 @@ jobs:
 
       - name: Extract toolchain
         run: |
-          rm -rf toolchain
-          mkdir -p toolchain
-
-          unzip -q toolchain.zip -d toolchain
+          unzip toolchain.zip
 
           echo "Toolchain directory:"
           find toolchain -maxdepth 4 -type d | sort
