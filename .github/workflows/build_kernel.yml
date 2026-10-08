@@ -15,7 +15,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: "16.0"
-          submodules: recursive
           fetch-depth: 0
 
       - name: Install build dependencies
@@ -94,6 +93,8 @@ jobs:
             local URL="$1"
             local DEST_DIR="$2"
             local real_url
+            local chrome_bin="${CHROME_BIN:-chromium}"
+            local domex
 
             if [[ -z "$URL" ]]; then
               echo "No MediaFire URL provided."
@@ -111,11 +112,8 @@ jobs:
               head -n 1 || true)
 
             if [[ -n "$real_url" ]]; then
-              echo "Found direct download URL:"
-              echo "$real_url"
-
-              echo "Downloading to:"
-              echo "$DEST_DIR"
+              echo "Found direct download URL."
+              echo "Downloading toolchain..."
 
               curl -L \
                 -A "Mozilla/5.0" \
@@ -129,11 +127,9 @@ jobs:
             echo "Static scrape failed."
             echo "Trying headless Chromium render..."
 
-            local chrome_bin="${CHROME_BIN:-chromium}"
-            local domex
-
             if ! command -v "$chrome_bin" >/dev/null 2>&1; then
               echo "Chromium not found."
+              echo "Unable to resolve the MediaFire download URL."
               return 2
             fi
 
@@ -164,8 +160,8 @@ jobs:
               return 4
             fi
 
-            echo "Found direct download URL:"
-            echo "$real_url"
+            echo "Found direct download URL."
+            echo "Downloading toolchain..."
 
             curl -L \
               -A "Mozilla/5.0" \
@@ -180,30 +176,24 @@ jobs:
 
           test -f "$GITHUB_WORKSPACE/toolchain.zip"
 
-          echo "Toolchain archive:"
           ls -lh "$GITHUB_WORKSPACE/toolchain.zip"
 
       - name: Extract toolchain
         run: |
-          unzip toolchain.zip
-
-          echo "Toolchain directory:"
-          find toolchain -maxdepth 4 -type d | sort
-
-      - name: Make build script executable
-        run: |
-          chmod +x build_kernel.sh
+          unzip -q toolchain.zip
 
       - name: Build kernel
         run: |
-          ./build_kernel.sh
+          chmod +x build_kernel.sh
+          ./build_kernel.sh -j4
 
       - name: List build artifacts
         if: always()
         run: |
-          echo "Kernel output:"
+          echo "Build output:"
           find out -type f 2>/dev/null | sort || true
 
+          echo ""
           echo "Distribution output:"
           find dist -type f 2>/dev/null | sort || true
 
@@ -212,9 +202,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: surya-kernel
-          path: |
-            dist/**
-            out/build.log
+          path: dist/**
           if-no-files-found: error
           retention-days: 30
 
@@ -223,8 +211,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: surya-kernel-build-log
-          path: |
-            out/build.log
-            out/**
+          path: out/build.log
           if-no-files-found: warn
           retention-days: 7
