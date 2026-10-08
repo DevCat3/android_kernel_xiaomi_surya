@@ -1,0 +1,163 @@
+name: Build Xiaomi Surya Kernel
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 16.0
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v4
+        with:
+          ref: 16.0
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+
+          sudo apt install -y \
+            flex \
+            libncurses-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            fakeroot \
+            rsync \
+            kmod \
+            xz-utils \
+            lz4 \
+            openssl \
+            python3 \
+            device-tree-compiler \
+            pahole \
+            dialog \
+            bash \
+            sed \
+            wget \
+            git \
+            curl \
+            zip \
+            tar \
+            jq \
+            expect \
+            make \
+            cmake \
+            automake \
+            autoconf \
+            binutils \
+            apt-utils \
+            perl \
+            gperf \
+            gawk \
+            bc \
+            zstd \
+            unzip \
+            cpio \
+            bison \
+            build-essential \
+            ccache \
+            liblz4-tool \
+            libsdl1.2-dev \
+            libstdc++6 \
+            libxml2 \
+            libxml2-utils \
+            lzop \
+            pngcrush \
+            schedtool \
+            squashfs-tools \
+            xsltproc \
+            zlib1g-dev \
+            bzip2 \
+            libssl-dev \
+            dwarves \
+            libelf-dev \
+            dos2unix \
+            python-is-python3 \
+            gh \
+            git-lfs \
+            nano
+
+      - name: Initialize Git submodules
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Download toolchain
+        run: |
+          TOOLCHAIN_URL="https://www.mediafire.com/file/nye07pqvologena/toolchain.zip/file"
+
+          wget \
+            --content-disposition \
+            --no-clobber \
+            "$TOOLCHAIN_URL" \
+            -O toolchain.zip
+
+      - name: Extract toolchain
+        run: |
+          rm -rf toolchain
+          mkdir -p toolchain
+
+          unzip -q toolchain.zip -d toolchain
+
+          echo "Toolchain contents:"
+          find toolchain -maxdepth 4 -type d | sort | head -200
+
+      - name: Verify toolchain
+        run: |
+          test -d "toolchain/clang/host/linux-x86/clang-r383902/bin"
+          test -d "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin"
+
+          test -x "toolchain/clang/host/linux-x86/clang-r383902/bin/clang"
+
+          test -x "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc"
+
+          echo "Clang:"
+          toolchain/clang/host/linux-x86/clang-r383902/bin/clang --version
+
+          echo "GCC:"
+          toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc --version
+
+      - name: Make build script executable
+        run: |
+          chmod +x build_kernel.sh
+
+      - name: Build kernel
+        run: |
+          ./build_kernel.sh -j"$(nproc --all)"
+
+      - name: List build artifacts
+        if: always()
+        run: |
+          echo "Kernel output:"
+          find out -type f 2>/dev/null | sort || true
+
+          echo "Distribution output:"
+          find dist -type f 2>/dev/null | sort || true
+
+      - name: Upload kernel artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surya-kernel
+          path: |
+            dist/**
+            out/build.log
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surya-kernel-build-log
+          path: |
+            out/build.log
+            out/**
+          if-no-files-found: warn
+          retention-days: 7
