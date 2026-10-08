@@ -4,3 +4,6 @@
 [submodule "NonGKI_Kernel_Build_2nd"]
 	path = NonGKI_Kernel_Build_2nd
 	url = https://github.com/JackA1ltman/NonGKI_Kernel_Build_2nd
+[submodule "NoMount"]
+	path = NoMount
+	url = https://github.com/maxsteeel/nomount
