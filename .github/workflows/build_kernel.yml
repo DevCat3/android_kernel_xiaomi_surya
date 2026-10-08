@@ -185,7 +185,7 @@ jobs:
       - name: Build kernel
         run: |
           chmod +x build_kernel.sh
-          ./build_kernel.sh -j4
+          ./build_kernel.sh -j 4
 
       - name: List build artifacts
         if: always()
