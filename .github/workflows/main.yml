@@ -100,10 +100,8 @@ jobs:
 
       - name: Extract toolchain
         run: |
-          rm -rf toolchain
           mkdir -p toolchain
-
-          unzip -q toolchain.zip -d toolchain
+          unzip toolchain.zip
 
           echo "Toolchain contents:"
           find toolchain -maxdepth 4 -type d | sort | head -200
@@ -129,7 +127,7 @@ jobs:
 
       - name: Build kernel
         run: |
-          ./build_kernel.sh -j"$(nproc --all)"
+          ./build_kernel.sh
 
       - name: List build artifacts
         if: always()
