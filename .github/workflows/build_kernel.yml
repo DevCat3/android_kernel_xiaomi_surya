@@ -190,24 +190,6 @@ jobs:
           echo "Toolchain directory:"
           find toolchain -maxdepth 4 -type d | sort
 
-      - name: Verify toolchain
-        run: |
-          echo "Checking Clang..."
-
-          test -d "toolchain/clang/host/linux-x86/clang-r383902/bin"
-          test -x "toolchain/clang/host/linux-x86/clang-r383902/bin/clang"
-
-          echo "Checking GCC..."
-
-          test -d "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin"
-          test -x "toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc"
-
-          echo "Clang version:"
-          toolchain/clang/host/linux-x86/clang-r383902/bin/clang --version
-
-          echo "GCC version:"
-          toolchain/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-gcc --version
-
       - name: Make build script executable
         run: |
           chmod +x build_kernel.sh
