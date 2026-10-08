@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - 16.0
+      - "16.0"
 
 jobs:
   build:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout kernel source
         uses: actions/checkout@v4
         with:
-          ref: 16.0
+          ref: "16.0"
           submodules: recursive
           fetch-depth: 0
 
